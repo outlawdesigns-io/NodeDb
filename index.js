@@ -122,7 +122,7 @@ class Db{
     return new Promise((resolve,reject)=>{
       con.query('select uuid() as uuid',(err,rows)=>{
         if(err) return reject(err);
-        resolve(rows);
+        resolve(rows[0]);
       });
     });
   }
