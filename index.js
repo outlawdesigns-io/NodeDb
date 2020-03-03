@@ -118,5 +118,13 @@ class Db{
     }
     return (new Date(Date.parse(dateStr) - tzoffset)).toISOString().substring(0, 19).replace('T', ' ');
   }
+  uuid(){
+    return new Promise((resolve,reject)=>{
+      con.query('select uuid()',(err,rows)=>{
+        if(err) return reject(err);
+        resolve(rows);
+      });
+    });
+  }
 }
 module.exports = Db;
