@@ -120,7 +120,7 @@ class Db{
   }
   uuid(){
     return new Promise((resolve,reject)=>{
-      con.query('select uuid()',(err,rows)=>{
+      con.query('select uuid() as uuid',(err,rows)=>{
         if(err) return reject(err);
         resolve(rows);
       });
