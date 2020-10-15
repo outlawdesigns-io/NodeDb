@@ -69,20 +69,25 @@ class Db{
     var k;
     for(k in keys){
       if(i++ < max){
-        this.query += keys[k] + ',';
+        this.query += "`" + keys[k] + '`,';
       }else{
-        this.query += keys[k] + ')';
+        this.query += "`" + keys[k] + '`)';
       }
     }
     this.query += ' VALUES (';
     i = 0;
     var value;
     for(value in insertObj){
-      if(i++ < max){
+      if(typeof insertObj[value] === 'string' && i < max){
         this.query += "\'" + insertObj[value].replace(/'/g,"''") + "\',";
-      }else{
+      }else if(typeof insertObj[value] === 'string'){
         this.query += "\'" + insertObj[value].replace(/'/g,"''") + "\')";
+      }else if(i < max){
+        this.query += "\'" + insertObj[value] + "\',";
+      }else{
+        this.query += "\'" + insertObj[value] + "\')";
       }
+      i++;
     }
     return this;
   }
