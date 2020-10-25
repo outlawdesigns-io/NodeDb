@@ -15,7 +15,7 @@ You can chain together Db's methods to build and execute queries for you, elimin
 
 Set the table you wish to query.
 
-### where(whereStr:string)
+### select(selectStr:string)
 
 Set the columns you wish to select.
 
@@ -25,34 +25,34 @@ Add a WHERE clause to your query.
 
 ```
 (async ()=>{
-  conn = new Database('localhost','user','pass','mysql');
+  const conn = new Database('localhost','user','pass','mysql');
   let users = await conn.table('user').select('user').where("password_expired = 'Y'").execute().catch(console.error);
   console.log(users);
 })();
 ```
 
-### andWhere($where:string,$conditional:string,$condition:string)
+### andWhere(whereStr:string)
 
 Add an AND clause to your query. This can be repeated as many times as desired.
 
 
-### orWhere($where:string,$conditional:string,$condition:string)
+### orWhere(whereStr:string)
 
 Add an OR clause to your query. This can be repeated as many times as desired.
 
 
-### orderBy($condition:string)
+### orderBy(whereStr:string)
 
 Add an ORDER BY clause to your query.
 
 
-### insert($data:AssociativeArray)
+### insert(data:obj)
 
 Insert a new record into the selected database and table.
 
 ```
 (async ()=>{
-  conn = new Database('localhost','user','pass','target_db');
+  const conn = new Database('localhost','user','pass','target_db');
   let obj = {key:'value',key2:'value2',key3:4};
   await conn.table('target_table').inset(obj).execute().catch(console.error);
   console.log(users);
@@ -60,13 +60,13 @@ Insert a new record into the selected database and table.
 
 ```
 
-### update($data:AssociativeArray)
+### update(data:obj)
 
 Update a specific record from the selected database and table. Note, if not combined with a where clause, this method will update all records in your table.
 
 ```
 (async ()=>{
-  conn = new Database('localhost','user','pass','target_db');
+  const conn = new Database('localhost','user','pass','target_db');
   let obj = {id:3,key:'value',key2:'value2',key3:4};
   await conn.table('target_table').update(obj).where("id = " + obj.id)execute().catch(console.error);
 })();
