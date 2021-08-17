@@ -11,7 +11,7 @@ class Db{
     this.password = password;
     this.database = database;
     if(!con){
-      con = mysql.createPool({host:this.host,user:this.user,password:this.password});
+      con = mysql.createPool({host:this.host,user:this.user,password:this.password,timezone:process.env.TZ});
     }
     this.query = '';
   }
