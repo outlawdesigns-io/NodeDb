@@ -45,6 +45,14 @@ class Db{
     this.query += ' OR ' + whereStr;
     return this;
   }
+  truncate(){
+    this.query += "TRUNCATE TABLE " + this.useTable;
+    return this;
+  }
+  delete(){
+    this.query += "DELETE FROM " + this.useTable + "\n";
+    return this;
+  }
   update(updateObj){
     this.query = 'UPDATE ' + this.useTable + ' SET ';
     var value;
