@@ -108,7 +108,7 @@ class Db{
   }
   close(){
     return new Promise((resolve,reject)=>{
-      this.con.end(err=>{
+      con.end(err=>{
         if(err){
           return reject(err);
         }
