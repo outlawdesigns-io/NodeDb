@@ -60,10 +60,10 @@ class Db{
     var max = Object.keys(updateObj).length - 1;
     for(value in updateObj){
       if(i++ < max){
-        this.query += value + '=' + (isNaN(updateObj[value]) ? "\'" + updateObj[value].replace(/'/g,"''") + "\'":updateObj[value]) + ',';
+        this.query += "`" + value + "`=" + (isNaN(updateObj[value]) ? "\'" + updateObj[value].replace(/'/g,"''") + "\'":updateObj[value]) + ',';
         //this.query += value + '=' + "\'" + updateObj[value].replace(/'/g,"''") + "\',";
       }else{
-        this.query += value + '=' + (isNaN(updateObj[value]) ? "\'" + updateObj[value].replace(/'/g,"''") + "\'":updateObj[value]);
+        this.query += "`" + value + "`=" + (isNaN(updateObj[value]) ? "\'" + updateObj[value].replace(/'/g,"''") + "\'":updateObj[value]);
         // this.query += value + '=' + "\'" + updateObj[value].replace(/'/g,"''") + "\'";
       }
     }
