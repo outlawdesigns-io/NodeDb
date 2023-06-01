@@ -1,3 +1,4 @@
+
 # Db
 
 Db (database) is a utility class that is intended to facilitate communications with a MySQL server.
@@ -10,7 +11,47 @@ You can chain together Db's methods to build and execute queries for you, elimin
 
 ## Methods
 
+### createDatabase(dbName:string)
 
+Create a Database.
+
+### createTable(table)
+
+Create a table on the current database.
+
+```
+let tableObj = {
+    name:'Test',
+    columns:[
+        {UID:['int','not null','auto_increment']},
+        {modelId:['int']},
+        {ipAddress:['varchar(50)']},
+        {createdDate:['DATETIME']}
+    ],
+    primaryKey:'UID'
+};
+(async ()=>{
+  const conn = new Database('localhost','user','pass','mysql');
+  await conn.createTable(tableObj).execute().catch(console.error);
+  console.log(users);
+})();
+
+```
+
+### drop(name:string, table: bool = true)
+
+Drop a database or table.
+
+### truncate()
+
+Truncate the selected table.
+
+### addColumn(column:string, dataType:string)
+Add a column to the selected table.
+### modifyColumn(column:string, dataType:string)
+Change the datatype of a column on the selected table.
+### dropColumn(column:string)
+Drop a column from the selected table.
 ### table(table:string)
 
 Set the table you wish to query.

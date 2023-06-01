@@ -25,6 +25,49 @@ class Db{
     }
     return this.instance;
   }
+  createDatabase(dbName){
+    this.query = 'CREATE DATABASE ' + dbName;
+    return this;
+  }
+  createTable(tableObj){
+    if(!table['name'] || !table['columns'] || !table['primaryKey']){
+      throw new Error('Malformed input object');
+    }
+    this.query = "CREATE TABLE " + table.name + "(\n";
+    for(let i in table.columns){
+      let columnName = Object.keys(table.columns[i])[0];
+      this.query += columnName + " ";
+      for(let j in table.columns[i][columnName]){
+        if(j == (table.columns[i][columnName].length - 1)){
+          this.query += table.columns[i][columnName][j] + ",\n";
+        }else{
+          this.query += table.columns[i][columnName][j] + " ";
+        }
+      }
+    }
+    this.query += "PRIMARY KEY (" + table.primaryKey + ")\n";
+    this.query += ");";
+    return this;
+  }
+  addColumn(column,dataType){
+    this.query = 'ALTER TABLE ' + this.useTable + ' ADD ' + column + ' ' + dataType + ';';
+    return this;
+  }
+  dropColumn(column){
+    this.query = 'ALTER TABLE ' + this.useTable + ' DROP COLUMN ' + column + ';';
+    return this;
+  }
+  modifyColumn(column,dataType){
+    this.query = 'ALTER TABLE ' + this.useTable + ' MODIFY COLUMN ' + column + ' ' + dataType + ';';
+  }
+  drop(name, table = true){
+    if(table){
+      this.query = 'DROP TABLE ' + name;
+    }else{
+      this.query = 'DROP DATABASE ' + name;
+    }
+    return this;
+  }
   table(table){
     this.useTable = this.database + '.' + table;
     return this;
@@ -101,6 +144,30 @@ class Db{
   }
   orderBy(orderBy){
     this.query += ' ORDER BY ' + orderBy;
+    return this;
+  }
+  groupBy(condition){
+    this.query += ' GROUP BY ' + condition;
+    return this;
+  }
+  having(where,conditional,condition){
+    this.query += ' HAVING ' + where + ' ' + conditional + ' ' + condition;
+    return this;
+  }
+  leftJoin(table,condition1,conditional,condition2){
+    this.query += ' LEFT JOIN ' + table + ' ON ' + condition1 + ' ' + conditional + ' ' + condition2;
+    return this;
+  }
+  rightJoin(table,condition1,conditional,condition2){
+    this.query += ' RIGHT JOIN ' + table + ' ON ' + condition1 + ' ' + conditional + ' ' + condition2;
+    return this;
+  }
+  innerJoin(table,condition1,conditional,condition2){
+    this.query += ' INNER JOIN ' + table + ' ON ' + condition1 + ' ' + conditional + ' ' + condition2;
+    return this;
+  }
+  crossJoin(table,condition1,conditional,condition2){
+    this.query += ' CROSS JOIN ' + table + ' ON ' + condition1 + ' ' + conditional + ' ' + condition2;
     return this;
   }
   execute(){
