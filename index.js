@@ -102,11 +102,15 @@ class Db{
     var i = 0;
     var max = Object.keys(updateObj).length - 1;
     for(value in updateObj){
+      let updateValue = updateObj[value];
+      if(updateValue instanceof Date){
+        updateValue = this.date(updateValue);
+      }
       if(i++ < max){
-        this.query += "`" + value + "`=" + (isNaN(updateObj[value]) ? "\'" + updateObj[value].replace(/'/g,"''") + "\'":updateObj[value]) + ',';
+        this.query += "`" + value + "`=" + (isNaN(updateValue) ? "\'" + updateValue.replace(/'/g,"''") + "\'":updateValue) + ',';
         //this.query += value + '=' + "\'" + updateObj[value].replace(/'/g,"''") + "\',";
       }else{
-        this.query += "`" + value + "`=" + (isNaN(updateObj[value]) ? "\'" + updateObj[value].replace(/'/g,"''") + "\'":updateObj[value]);
+        this.query += "`" + value + "`=" + (isNaN(updateValue) ? "\'" + updateValue.replace(/'/g,"''") + "\'":updateValue);
         // this.query += value + '=' + "\'" + updateObj[value].replace(/'/g,"''") + "\'";
       }
     }
@@ -191,12 +195,13 @@ class Db{
       });
     });
   }
-  date(dateStr){
-    var tzoffset = (new Date()).getTimezoneOffset() * 60000;
-    if(dateStr === undefined){
-      return (new Date(Date.now() - tzoffset)).toISOString().substring(0, 19).replace('T', ' ');
-    }
-    return (new Date(Date.parse(dateStr) - tzoffset)).toISOString().substring(0, 19).replace('T', ' ');
+  date(dateInput) {
+    const d = dateInput ? new Date(dateInput) : new Date();
+
+    const pad = (n) => n.toString().padStart(2, '0');
+
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+           `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
   uuid(){
     return new Promise((resolve,reject)=>{
