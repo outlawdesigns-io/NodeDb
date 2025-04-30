@@ -30,167 +30,123 @@ class Db{
     return this;
   }
   createTable(tableObj){
-    if(!table['name'] || !table['columns'] || !table['primaryKey']){
+    if(!tableObj['name'] || !tableObj['columns'] || !tableObj['primaryKey']){
       throw new Error('Malformed input object');
     }
     this.query = "CREATE TABLE " + table.name + "(\n";
     for(let i in table.columns){
       let columnName = Object.keys(table.columns[i])[0];
       this.query += columnName + " ";
-      for(let j in table.columns[i][columnName]){
-        if(j == (table.columns[i][columnName].length - 1)){
-          this.query += table.columns[i][columnName][j] + ",\n";
-        }else{
-          this.query += table.columns[i][columnName][j] + " ";
-        }
-      }
+      this.query += tableObj.columns[i][columnName].join(" ") + ",\n";
     }
-    this.query += "PRIMARY KEY (" + table.primaryKey + ")\n";
+    this.query += "PRIMARY KEY (" + tableObj.primaryKey + ")\n";
     this.query += ");";
     return this;
   }
   addColumn(column,dataType){
-    this.query = 'ALTER TABLE ' + this.useTable + ' ADD ' + column + ' ' + dataType + ';';
+    this.query = `ALTER TABLE ${this.useTable} ADD ${column} ${dataType}`;
     return this;
   }
   dropColumn(column){
-    this.query = 'ALTER TABLE ' + this.useTable + ' DROP COLUMN ' + column + ';';
+    this.query = `ALTER TABLE ${this.useTable} DROP COLUMN ${column};`;
     return this;
   }
   modifyColumn(column,dataType){
-    this.query = 'ALTER TABLE ' + this.useTable + ' MODIFY COLUMN ' + column + ' ' + dataType + ';';
+    this.query = `ALTER TABLE ${this.useTable} MODIFY COLUMN ${column} ${dataType};`;
+    return this;
   }
   drop(name, table = true){
-    if(table){
-      this.query = 'DROP TABLE ' + name;
-    }else{
-      this.query = 'DROP DATABASE ' + name;
-    }
+    this.query = `DROP ${ table ? 'TABLE':'DATABASE'} ${name}`;
     return this;
   }
   table(table){
-    this.useTable = this.database + '.' + table;
+    this.useTable = `${this.database}.${table}`;
     return this;
   }
   select(selectStr){
-    this.query = 'SELECT ' + selectStr + ' FROM ' + this.useTable;
+    this.query = `SELECT ${selectStr} FROM ${this.useTable}`;
     return this;
   }
-  where(whereStr){
-    this.query += ' WHERE ' + whereStr;
+  where(clause, params = []){
+    this.query += `WHERE ${clause}`;
+    this.params.push(...params);
     return this;
   }
-  andWhere(whereStr){
-    this.query += ' AND ' + whereStr;
+  andWhere(clause,params = []){
+    this.query += ` AND ${clause}`;
+    this.params.push(...params);
     return this;
   }
-  orWhere(whereStr){
-    this.query += ' OR ' + whereStr;
+  orWhere(clause,params = []){
+    this.query += ` OR ${clause}`;
+    this.params.push(...params);
     return this;
   }
   truncate(){
-    this.query += "TRUNCATE TABLE " + this.useTable;
+    this.query  += `TRUNCATE TABLE ${this.useTable}`;
     return this;
   }
   delete(){
-    this.query += "DELETE FROM " + this.useTable + "\n";
+    this.query += `DELETE FROM ${this.useTable}\n`;
     return this;
   }
   update(updateObj){
-    this.query = 'UPDATE ' + this.useTable + ' SET ';
-    var value;
-    var i = 0;
-    var max = Object.keys(updateObj).length - 1;
-    for(value in updateObj){
-      let updateValue = updateObj[value];
-      if(updateValue instanceof Date){
-        updateValue = this.date(updateValue);
-      }
-      if(i++ < max){
-        this.query += "`" + value + "`=" + (isNaN(updateValue) ? "\'" + updateValue.replace(/'/g,"''") + "\'":updateValue) + ',';
-        //this.query += value + '=' + "\'" + updateObj[value].replace(/'/g,"''") + "\',";
-      }else{
-        this.query += "`" + value + "`=" + (isNaN(updateValue) ? "\'" + updateValue.replace(/'/g,"''") + "\'":updateValue);
-        // this.query += value + '=' + "\'" + updateObj[value].replace(/'/g,"''") + "\'";
-      }
-    }
+    this.params = [];
+    const keys = Object.keys(updateObj);
+    const assignments = keys.map( k => `\`${k}\` = ?`).join(', ');
+    this.query = `UPDATE ${this.useTable} SET ${assignments}`;
+    this.params.push(...keys.map(k => updateObj[k]));
     return this;
   }
   insert(insertObj){
-    this.query = 'INSERT INTO ' + this.useTable + '(';
-    var keys = Object.keys(insertObj);
-    var max = keys.length - 1;
-    var i = 0;
-    var k;
-    for(k in keys){
-      if(i++ < max){
-        this.query += "`" + keys[k] + '`,';
-      }else{
-        this.query += "`" + keys[k] + '`)';
-      }
-    }
-    this.query += ' VALUES (';
-    i = 0;
-    var value;
-    for(value in insertObj){
-      if(typeof insertObj[value] === 'string' && i < max){
-        this.query += "\'" + insertObj[value].replace(/'/g,"''") + "\',";
-      }else if(typeof insertObj[value] === 'string'){
-        this.query += "\'" + insertObj[value].replace(/'/g,"''") + "\')";
-      }else if(i < max){
-        this.query += "\'" + insertObj[value] + "\',";
-      }else{
-        this.query += "\'" + insertObj[value] + "\')";
-      }
-      i++;
-    }
+    this.params = [];
+    this.query = `INSERT INTO ${this.useTable} (`;
+    const keys = Object.keys(insertObj);
+    const placeHolders = keys.map(() => '?');
+    this.query += keys.map( k => `\`${k}\``).join(', ') + ') VALUES (' + placeHolders.join(', ') + ')';
+    this.params.push(...keys.map(k => insertObj[k]);
     return this;
   }
   orderBy(orderBy){
-    this.query += ' ORDER BY ' + orderBy;
+    this.query += ` ORDER BY ${orderBy}`;
     return this;
   }
   groupBy(condition){
-    this.query += ' GROUP BY ' + condition;
+    this.query += ` GROUP BY ${condition}`;
     return this;
   }
   having(where,conditional,condition){
-    this.query += ' HAVING ' + where + ' ' + conditional + ' ' + condition;
+    this.query += ` HAVING ${where} ${conditional} ${condition}`;
     return this;
   }
   leftJoin(table,condition1,conditional,condition2){
-    this.query += ' LEFT JOIN ' + table + ' ON ' + condition1 + ' ' + conditional + ' ' + condition2;
+    this.query += ` LEFT JOIN ${table} ON ${condition1} ${conditional} ${condition2}`;
     return this;
   }
   rightJoin(table,condition1,conditional,condition2){
-    this.query += ' RIGHT JOIN ' + table + ' ON ' + condition1 + ' ' + conditional + ' ' + condition2;
+    this.query += ` RIGHT JOIN ${table} ON ${condition1} ${conditional} ${condition2}`;
     return this;
   }
   innerJoin(table,condition1,conditional,condition2){
-    this.query += ' INNER JOIN ' + table + ' ON ' + condition1 + ' ' + conditional + ' ' + condition2;
+    this.query += ` INNER JOIN ${table} ON ${condition1} ${conditional} ${condition2}`;
     return this;
   }
   crossJoin(table,condition1,conditional,condition2){
-    this.query += ' CROSS JOIN ' + table + ' ON ' + condition1 + ' ' + conditional + ' ' + condition2;
+    this.query += ` CROSS JOIN ${table} ON ${condition1} ${conditional} ${condition2}`;
     return this;
   }
   execute(){
     return new Promise((resolve,reject)=>{
       con.query(this.query,(err,rows)=>{
-        if(err){
-          return reject(err);
-        }else{
-          resolve(rows);
-        }
+        if(err) return reject(err);
+        resolve(rows);
       })
     });
   }
   close(){
     return new Promise((resolve,reject)=>{
       con.end(err=>{
-        if(err){
-          return reject(err);
-        }
+        if (err) return reject(err);
         resolve();
       });
     });
