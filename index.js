@@ -14,6 +14,7 @@ class Db{
       con = mysql.createPool({host:this.host,user:this.user,password:this.password,timezone:process.env.TZ});
     }
     this.query = '';
+    this.params = [];
   }
   createInstance(host,user,password,database){
     let object = new Db(host,user,password,database);
@@ -68,7 +69,7 @@ class Db{
     return this;
   }
   where(clause, params = []){
-    this.query += `WHERE ${clause}`;
+    this.query += ` WHERE ${clause}`;
     this.params.push(...params);
     return this;
   }
@@ -104,7 +105,7 @@ class Db{
     const keys = Object.keys(insertObj);
     const placeHolders = keys.map(() => '?');
     this.query += keys.map( k => `\`${k}\``).join(', ') + ') VALUES (' + placeHolders.join(', ') + ')';
-    this.params.push(...keys.map(k => insertObj[k]);
+    this.params.push(...keys.map(k => insertObj[k]));
     return this;
   }
   orderBy(orderBy){
@@ -137,7 +138,11 @@ class Db{
   }
   execute(){
     return new Promise((resolve,reject)=>{
-      con.query(this.query,(err,rows)=>{
+      const query = this.query;
+      const params = this.params || [];
+      this.query = '';
+      this.params = [];
+      con.query(query,params,(err,rows)=>{
         if(err) return reject(err);
         resolve(rows);
       })
