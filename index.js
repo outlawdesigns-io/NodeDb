@@ -1,6 +1,6 @@
 "use strict";
 
-var mysql = require('mysql');
+var mysql = require('mysql2');
 
 var con = null;
 
@@ -11,7 +11,7 @@ class Db{
     this.password = password;
     this.database = database;
     if(!con){
-      con = mysql.createPool({host:this.host,user:this.user,password:this.password,timezone:process.env.TZ});
+      con = mysql.createPool({host:this.host,user:this.user,password:this.password,timezone:process.env.TZ}).promise();
     }
     this.query = '';
     this.params = [];
@@ -34,9 +34,9 @@ class Db{
     if(!tableObj['name'] || !tableObj['columns'] || !tableObj['primaryKey']){
       throw new Error('Malformed input object');
     }
-    this.query = "CREATE TABLE " + table.name + "(\n";
-    for(let i in table.columns){
-      let columnName = Object.keys(table.columns[i])[0];
+    this.query = "CREATE TABLE " + tableObj.name + "(\n";
+    for(let i in tableObj.columns){
+      let columnName = Object.keys(tableObj.columns[i])[0];
       this.query += columnName + " ";
       this.query += tableObj.columns[i][columnName].join(" ") + ",\n";
     }
@@ -84,11 +84,11 @@ class Db{
     return this;
   }
   truncate(){
-    this.query  += `TRUNCATE TABLE ${this.useTable}`;
+    this.query  = `TRUNCATE TABLE ${this.useTable}`;
     return this;
   }
   delete(){
-    this.query += `DELETE FROM ${this.useTable}\n`;
+    this.query = `DELETE FROM ${this.useTable}\n`;
     return this;
   }
   update(updateObj){
@@ -136,25 +136,21 @@ class Db{
     this.query += ` CROSS JOIN ${table} ON ${condition1} ${conditional} ${condition2}`;
     return this;
   }
-  execute(){
-    return new Promise((resolve,reject)=>{
-      const query = this.query;
-      const params = this.params || [];
-      this.query = '';
-      this.params = [];
-      con.query(query,params,(err,rows)=>{
-        if(err) return reject(err);
-        resolve(rows);
-      })
-    });
+  async execute(){
+    const query = this.query;
+    const params = this.params || [];
+    this.query = '';
+    this.params = [];
+    try{
+      const result = await con.query(query, params);
+      const rows = result[0];
+      return rows;
+    }catch(err){
+      throw err;
+    }
   }
-  close(){
-    return new Promise((resolve,reject)=>{
-      con.end(err=>{
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+  async close(){
+    await con.end();
   }
   date(dateInput) {
     const d = dateInput ? new Date(dateInput) : new Date();
@@ -164,13 +160,13 @@ class Db{
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
            `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
-  uuid(){
-    return new Promise((resolve,reject)=>{
-      con.query('select uuid() as uuid',(err,rows)=>{
-        if(err) return reject(err);
-        resolve(rows[0]);
-      });
-    });
+  async uuid(){
+    try{
+      const [rows] = await con.query('select uuid() as uuid');
+      return rows[0];
+    }catch(err){
+      throw err;
+    }
   }
 }
 module.exports = Db;
