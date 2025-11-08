@@ -11,7 +11,7 @@ class Db{
     this.password = password;
     this.database = database;
     if(!con){
-      con = mysql.createPool({host:this.host,user:this.user,password:this.password,timezone:process.env.TZ}).promise();
+      con = mysql.createPool({host:this.host,user:this.user,password:this.password}).promise();
     }
     this.query = '';
     this.params = [];
